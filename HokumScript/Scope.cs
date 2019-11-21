@@ -9,14 +9,20 @@ namespace HokumScript
 
         public void Unset(string key)
         {
-            data.Remove(key);
+            lock (data)
+            {
+                data.Remove(key);
+            }
         }
 
         public void Set(string key, object value)
         {
-            if (data.ContainsKey(key))
-                data.Remove(key);
-            data.Add(key, value);
+            lock (data)
+            {
+                if (data.ContainsKey(key))
+                    Unset(key);
+                data.Add(key, value);
+            }
         }
 
         public object Get(string key)
