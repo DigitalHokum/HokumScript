@@ -103,6 +103,7 @@ namespace HokumScript
             Console.WriteLine($"result {value.GetValue<int>()}");
             Assert.AreEqual(5, value.GetValue<int>());
             
+            /*
             innerScope.Set("bar", false);
             value = await tree.Evaluate(scope);
             Assert.AreEqual(false, value.GetValue<bool>());
@@ -113,6 +114,7 @@ namespace HokumScript
             innerScope.Set("baz", lastScope);
             value = await tree.Evaluate(scope);
             Assert.AreEqual(101, value.GetValue<int>());
+            */
         }
         
         [Test]

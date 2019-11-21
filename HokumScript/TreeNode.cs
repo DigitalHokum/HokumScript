@@ -193,11 +193,16 @@ namespace HokumScript
         }
 
         public async Task<DynamicReturnValue> Evaluate(Scope scope) {
-            DynamicReturnValue parent = await Scope.Evaluate(scope);
-            if (parent == null)
-                Console.WriteLine("ERROR ERROR BEEP BOOP");
-            string name = await GetName(scope);
             
+            DynamicReturnValue parent = await Scope.Evaluate(scope);
+
+            if (parent.IsNull())
+            {
+                Console.WriteLine("ERROR ERROR BEEP BOOP");
+                return new DynamicReturnValue(null);
+            }
+
+            string name = await GetName(scope);
             Console.WriteLine($"The name is {name}");
             
             return new DynamicReturnValue(parent.GetValue<Scope>().Get(name));
