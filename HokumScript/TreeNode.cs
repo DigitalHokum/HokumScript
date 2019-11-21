@@ -202,10 +202,7 @@ namespace HokumScript
                 Console.WriteLine("ERROR ERROR BEEP BOOP");
                 return new DynamicReturnValue(null);
             }
-
             string name = await GetName(scope);
-            Console.WriteLine($"The name is {name}");
-            
             return new DynamicReturnValue(parent.GetValue<Scope>().Get(name));
         }
 
@@ -233,7 +230,6 @@ namespace HokumScript
         public async Task<DynamicReturnValue> Evaluate(Scope scope)
         {
             string key = await GetName(scope);
-            Console.WriteLine($"The key is {key} with a Type of {scope.GetType(key).Name}");
             return new DynamicReturnValue(scope.Get(key));
         }
 
