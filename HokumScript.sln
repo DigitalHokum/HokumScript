@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HokumScript", "HokumScript\HokumScript.csproj", "{A7CDB7D8-B5AB-4C9D-857A-A45A8FDCA695}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A7CDB7D8-B5AB-4C9D-857A-A45A8FDCA695}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7CDB7D8-B5AB-4C9D-857A-A45A8FDCA695}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7CDB7D8-B5AB-4C9D-857A-A45A8FDCA695}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7CDB7D8-B5AB-4C9D-857A-A45A8FDCA695}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
