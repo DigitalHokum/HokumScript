@@ -45,11 +45,11 @@ namespace HokumScript
             
             tree = new Tree("5");
             value = await tree.Evaluate(new Scope());
-            Assert.AreEqual(5, value.GetValue<int>());
+            Assert.AreEqual(5.0f, value.GetValue<float>());
             
             tree = new Tree("490231");
             value = await tree.Evaluate(new Scope());
-            Assert.AreEqual(490231, value.GetValue<int>());
+            Assert.AreEqual(490231.0f, value.GetValue<float>());
         }
 
         [Test]
@@ -103,7 +103,6 @@ namespace HokumScript
             Console.WriteLine($"result {value.GetValue<int>()}");
             Assert.AreEqual(5, value.GetValue<int>());
             
-            /*
             innerScope.Set("bar", false);
             value = await tree.Evaluate(scope);
             Assert.AreEqual(false, value.GetValue<bool>());
@@ -114,7 +113,6 @@ namespace HokumScript
             innerScope.Set("baz", lastScope);
             value = await tree.Evaluate(scope);
             Assert.AreEqual(101, value.GetValue<int>());
-            */
         }
         
         [Test]
@@ -151,21 +149,19 @@ namespace HokumScript
                 result = 'not right';
             }
             ");
-            Console.WriteLine("Tree");
             Scope scope = new Scope();
             await tree.Evaluate(scope);
             Console.WriteLine($"Result it Type {scope.GetType("result")}");
             Assert.AreEqual(true, scope.Get("result"));
         }
         
-        /*
         [Test]
         public async Task TestForStatementNode()
         {
             Scope scope = new Scope();
             Scope innerScope = new Scope();
-            List<int> loopTest = new List<int>();
-            for (int i = 1; i <= 9; i++)
+            List<float> loopTest = new List<float>();
+            for (float i = 1.0f; i <= 9.0f; i++)
             {
                 loopTest.Add(i);
             }
@@ -182,11 +178,10 @@ namespace HokumScript
             ");
            
             await tree.Evaluate(scope);
-            Assert.AreEqual(46.0f, innerScope.Get<float>("foo"));
-            Assert.AreEqual(9.0f, scope.Get<float>("foo"));
+            Assert.AreEqual(46.0f, innerScope.Get("foo"));
+            Assert.AreEqual(9.0f, scope.Get("foo"));
         }
-        */
-        
+
         [Test]
         public async Task TestFunctionCallNode()
         {

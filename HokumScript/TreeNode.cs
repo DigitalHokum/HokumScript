@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace HokumScript
@@ -393,18 +394,38 @@ namespace HokumScript
             Block = block;
         }
 
+        private async Task EvaluateBlock(Scope scope, string variable, object val)
+        {
+            scope.Set(variable, val);
+            await Block.Evaluate(scope);
+        }
+
         public async Task<DynamicReturnValue> Evaluate(Scope scope)
         {
             string variable = (await Variable.Evaluate(scope)).GetValue<string>();
-            object[] arr = (await Array.Evaluate(scope)).GetValue<object[]>();
             
-            foreach (var val in arr)
+            DynamicReturnValue value = (await Array.Evaluate(scope));
+            Type type = value.Value.GetType();
+
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
             {
-                scope.Set(variable, val);
-                await Block.Evaluate(scope);
+                if (type == typeof(List<float>))
+                {
+                    foreach (float val in value.GetValue<List<float>>())
+                    {
+                        await EvaluateBlock(scope, variable, val);
+                    }
+                }
+                else if (type == typeof(List<string>))
+                {
+                    foreach (string val in value.GetValue<List<string>>())
+                    {
+                        await EvaluateBlock(scope, variable, val);
+                    }
+                }
             }
 
-            return null;
+            return new DynamicReturnValue(null);
         }
 
         public static ForStatementNode Parse(AstTreeNode lastNode, Token token, List<Token> tokens)
@@ -457,8 +478,9 @@ namespace HokumScript
         public async Task<DynamicReturnValue> Evaluate(Scope scope) {
             DynamicReturnValue left = await Left.Evaluate(scope);
             DynamicReturnValue right = await Right.Evaluate(scope);
-
-            switch (Type) {
+            
+            switch (Type)
+            {
                 case ETokenType.ADD:
                     return new DynamicReturnValue(left.GetValue<float>() + right.GetValue<float>());
                 case ETokenType.SUBTRACT:
@@ -468,6 +490,7 @@ namespace HokumScript
                 case ETokenType.DIVIDE:
                     return new DynamicReturnValue(left.GetValue<float>() / right.GetValue<float>());
             }
+            
             return new DynamicReturnValue(null);
         }
 
