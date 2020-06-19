@@ -44,11 +44,7 @@ namespace HokumScript.Test
             
             tree = new Tree("5");
             value = await tree.Evaluate(new Scope());
-            Assert.Equal(5.0f, value.GetValue<float>());
-            
-            tree = new Tree("490231");
-            value = await tree.Evaluate(new Scope());
-            Assert.Equal(490231.0f, value.GetValue<float>());
+            Assert.Equal(5, value.GetValue<int>());
         }
 
         [Fact]
@@ -168,8 +164,8 @@ namespace HokumScript.Test
             scope.Set("test", innerScope);
             
             Tree tree = new Tree(@"
-                test.foo = 1;
-                foo = 1;
+                test.foo = 1.0;
+                foo = 1.0;
                 for (var of loopTest) {
                     test.foo += var;
                     foo = var;
