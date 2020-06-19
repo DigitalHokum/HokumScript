@@ -27,17 +27,26 @@ namespace HokumScript
 
         public object Get(string key)
         {
-            if (!data.ContainsKey(key))
-                return null;
-            return data[key];
+            lock (data)
+            {
+                return !data.ContainsKey(key) ? null : data[key];
+            }
+        }
+        
+        public T Get<T>(string key)
+        {
+            lock (data)
+            {
+                return !data.ContainsKey(key) ? default(T) : (T) data[key];
+            }
         }
 
         public Type GetType(string key)
         {
-            if (!data.ContainsKey(key))
-                return null;
-
-            return data[key].GetType();
+            lock (data)
+            {
+                return !data.ContainsKey(key) ? null : data[key].GetType();
+            }
         }
     }
 }

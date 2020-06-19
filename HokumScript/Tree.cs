@@ -76,7 +76,7 @@ namespace HokumScript
                     }
                     else
                     {
-                        node = new FloatLiteralNode(token.Value);    
+                        node = new IntegerLiteralNode(token.Value);    
                     }
                     
                     tokens.RemoveAt(0);
