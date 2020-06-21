@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace HokumScript.Test
 {
@@ -28,6 +30,13 @@ namespace HokumScript.Test
     
     public class ScriptingTest
     {
+        private readonly ITestOutputHelper output;
+
+        public ScriptingTest(ITestOutputHelper output)
+        {
+            this.output = output;
+        }
+        
         [Fact]
         public void TestTokenize()
         {
@@ -128,6 +137,50 @@ namespace HokumScript.Test
             scope.Set("foo", innerScope);
             value = await tree.Evaluate(scope);
             Assert.Equal(7.5f, value.GetValue<float>());
+        }
+
+        [Fact]
+        public async Task TestArithmeticNode()
+        {
+            Tree tree = new Tree("foo = 150 + 5.0");
+            Scope scope = new Scope();
+            await tree.Evaluate(scope);
+            Assert.Equal(155.0f, scope.Get("foo"));
+
+            tree = new Tree("foo = 150 + 5");
+            scope = new Scope();
+            await tree.Evaluate(scope);
+            Assert.Equal(155, scope.Get("foo"));
+            
+            tree = new Tree("foo = 150 - 5.0");
+            scope = new Scope();
+            await tree.Evaluate(scope);
+            Assert.Equal(145f, scope.Get("foo"));
+
+            tree = new Tree("foo = 150 - 5");
+            scope = new Scope();
+            await tree.Evaluate(scope);
+            Assert.Equal(145, scope.Get("foo"));
+            
+            tree = new Tree("foo = 150 * 5.0");
+            scope = new Scope();
+            await tree.Evaluate(scope);
+            Assert.Equal(750f, scope.Get("foo"));
+            
+            tree = new Tree("foo = 150 * 5");
+            scope = new Scope();
+            await tree.Evaluate(scope);
+            Assert.Equal(750, scope.Get("foo"));
+            
+            tree = new Tree("foo = 150 / 5.0");
+            scope = new Scope();
+            await tree.Evaluate(scope);
+            Assert.Equal(30f, scope.Get("foo"));
+            
+            tree = new Tree("foo = 150 / 5");
+            scope = new Scope();
+            await tree.Evaluate(scope);
+            Assert.Equal(30, scope.Get("foo"));
         }
         
         [Fact]

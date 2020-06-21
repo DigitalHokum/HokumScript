@@ -473,27 +473,56 @@ namespace HokumScript
             DynamicReturnValue left = await Left.Evaluate(scope);
             DynamicReturnValue right = await Right.Evaluate(scope);
             
-            switch (Type)
-            {
-                case ETokenType.ADD:
-                    return new DynamicReturnValue(left.GetValue<float>() + right.GetValue<float>());
-                case ETokenType.SUBTRACT:
-                    return new DynamicReturnValue(left.GetValue<float>() - right.GetValue<float>());
-                case ETokenType.MULTIPLY:
-                    return new DynamicReturnValue(left.GetValue<float>() * right.GetValue<float>());
-                case ETokenType.DIVIDE:
-                    return new DynamicReturnValue(left.GetValue<float>() / right.GetValue<float>());
-            }
+            Type leftType = left.Type;
+            Type rightType = right.Type;
             
+            if (leftType == typeof(int) && rightType == typeof(int))
+            {
+                switch (Type)
+                {
+                    case ETokenType.ADD:
+                        return new DynamicReturnValue(left.GetValue<int>() + right.GetValue<int>());
+                    case ETokenType.SUBTRACT:
+                        return new DynamicReturnValue(left.GetValue<int>() - right.GetValue<int>());
+                    case ETokenType.MULTIPLY:
+                        return new DynamicReturnValue(left.GetValue<int>() * right.GetValue<int>());
+                    case ETokenType.DIVIDE:
+                        return new DynamicReturnValue(left.GetValue<int>() / right.GetValue<int>());
+                }            
+            }
+            else
+            {
+                float leftValue = leftType == typeof(int)
+                    ? left.GetValue<int>()
+                    : left.GetValue<float>();
+                float rightValue = rightType == typeof(int)
+                    ? right.GetValue<int>()
+                    : right.GetValue<float>();
+
+                switch (Type)
+                {
+                    case ETokenType.ADD:
+                        return new DynamicReturnValue(leftValue + rightValue);
+                    case ETokenType.SUBTRACT:
+                        return new DynamicReturnValue(leftValue - rightValue);
+                    case ETokenType.MULTIPLY:
+                        return new DynamicReturnValue(leftValue * rightValue);
+                    case ETokenType.DIVIDE:
+                        return new DynamicReturnValue(leftValue / rightValue);
+                }
+            }
+
             return new DynamicReturnValue(null);
         }
 
         public static bool Matches(List<Token> tokens) {
-            List<ETokenType> types = new List<ETokenType>();
-            types.Add(ETokenType.ADD);
-            types.Add(ETokenType.SUBTRACT);
-            types.Add(ETokenType.MULTIPLY);
-            types.Add(ETokenType.DIVIDE);
+            List<ETokenType> types = new List<ETokenType>
+            {
+                ETokenType.ADD,
+                ETokenType.SUBTRACT,
+                ETokenType.MULTIPLY,
+                ETokenType.DIVIDE
+            };
             return types.Contains(tokens[0].Type);
         }
 
@@ -525,7 +554,7 @@ namespace HokumScript
             DynamicReturnValue left = await Left.Evaluate(scope);
             DynamicReturnValue right = await Right.Evaluate(scope);
             float value = 0;
-            
+
             switch (Type) {
                 case ETokenType.ADD_ASSIGN:
                     value = left.GetValue<float>() + right.GetValue<float>();
@@ -544,7 +573,7 @@ namespace HokumScript
             Scope innerScope = await Left.GetScope(scope);
             innerScope.Set(name, value);
 
-            if ((float)innerScope.Get(name) != value)
+            if ((float) innerScope.Get(name) != value)
             {
                 Console.WriteLine("System Error: Failed to assign ${name} to ${right}");
                 return new DynamicReturnValue(null);

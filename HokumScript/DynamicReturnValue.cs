@@ -1,6 +1,4 @@
 using System;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
 
 namespace HokumScript
 {
@@ -8,10 +6,36 @@ namespace HokumScript
     {
         private object _value;
         public object Value => _value;
+        public readonly Type Type;
 
-        public DynamicReturnValue(object value)
+        public DynamicReturnValue(int value)
         {
             _value = value;
+            Type = typeof(int);
+        }
+        
+        public DynamicReturnValue(float value)
+        {
+            _value = value;
+            Type = typeof(float);
+        }
+        
+        public DynamicReturnValue(string value)
+        {
+            _value = value;
+            Type = typeof(string);
+        }
+        
+        public DynamicReturnValue(bool value)
+        {
+            _value = value;
+            Type = typeof(bool);
+        }
+        
+        public DynamicReturnValue(object value, Type type = null)
+        {
+            _value = value;
+            Type = type;
         }
 
         public override bool Equals(object obj)
@@ -38,6 +62,7 @@ namespace HokumScript
         {
             if (obj1 == null || obj2 == null)
                 return false;
+            
             if (obj1.GetType() != obj2.GetType())
                 return false;
             
@@ -63,6 +88,7 @@ namespace HokumScript
             Type type = obj1.Value.GetType();
             if (type == typeof(float))
                 return obj1.GetValue<float>() > obj2.GetValue<float>();
+            
             if (type == typeof(int))
                 return obj1.GetValue<int>() > obj2.GetValue<int>();
 
