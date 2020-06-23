@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace HokumScript
+namespace HokumScript.Scripting
 {
     public struct TokenPattern
     {

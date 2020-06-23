@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using HokumScript.Scripting;
 using Xunit;
 using Xunit.Abstractions;
 

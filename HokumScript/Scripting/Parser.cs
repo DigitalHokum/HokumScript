@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace HokumScript
+namespace HokumScript.Scripting
 {
     public class Parser
     {
