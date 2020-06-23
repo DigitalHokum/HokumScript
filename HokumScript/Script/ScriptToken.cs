@@ -1,16 +1,9 @@
-using System.Text.RegularExpressions;
-
 namespace HokumScript.Script
 {
-    public struct TokenPattern
+    public class ScriptTokenPattern : TokenPattern<EScriptTokenType>
     {
-        public readonly EScriptTokenType Type;
-        public readonly Regex Pattern;
-
-        public TokenPattern(EScriptTokenType type, string regex)
+        public ScriptTokenPattern(EScriptTokenType type, string regex) : base(type, regex)
         {
-            Type = type;
-            Pattern = new Regex(regex);
         }
     }
 

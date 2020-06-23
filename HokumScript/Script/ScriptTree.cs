@@ -13,7 +13,8 @@ namespace HokumScript.Script
         public ScriptTree(string code)
         {
             Code = code;
-            Tokens = ScriptParser.Tokenize(code);
+            ScriptParser parser = new ScriptParser();
+            Tokens = parser.Tokenize(code);
             RootNode = ProcessTokens(Tokens);
         }
 

@@ -2,15 +2,10 @@ using System.Text.RegularExpressions;
 
 namespace HokumScript.Template
 {
-    public struct TokenPattern
+    public class TemplateTokenPattern : TokenPattern<ETemplateTokenType>
     {
-        public readonly ETemplateTokenType Type;
-        public readonly Regex Pattern;
-
-        public TokenPattern(ETemplateTokenType type, string regex)
+        public TemplateTokenPattern(ETemplateTokenType type, string regex) : base(type, regex)
         {
-            Type = type;
-            Pattern = new Regex(regex);
         }
     }
 
@@ -32,4 +27,3 @@ namespace HokumScript.Template
         END_SCRIPT,
     }
 }
-

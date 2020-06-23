@@ -40,7 +40,8 @@ namespace HokumScript.Test
         [Fact]
         public void TestTokenize()
         {
-            List<ScriptToken> tokens = ScriptParser.Tokenize("1 + 5;something = false;callFunc();indice[0];block {};");
+            ScriptParser parser = new ScriptParser();
+            List<ScriptToken> tokens = parser.Tokenize("1 + 5;something = false;callFunc();indice[0];block {};");
             Assert.Equal(26, tokens.Count);
         }
         
