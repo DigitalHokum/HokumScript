@@ -2,18 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace HokumScript.Scripting
+namespace HokumScript.Script
 {
-    public class Tree
+    public class ScriptTree
     {
         public readonly string Code;
-        public readonly List<Token> Tokens;
+        public readonly List<ScriptToken> Tokens;
         private AstTreeNode RootNode;
 
-        public Tree(string code)
+        public ScriptTree(string code)
         {
             Code = code;
-            Tokens = Parser.Tokenize(code);
+            Tokens = ScriptParser.Tokenize(code);
             RootNode = ProcessTokens(Tokens);
         }
 
@@ -22,7 +22,7 @@ namespace HokumScript.Scripting
             return await RootNode.Evaluate(scope);
         }
 
-        public static BlockNode ProcessTokens(List<Token> tokens)
+        public static BlockNode ProcessTokens(List<ScriptToken> tokens)
         {
             List<AstTreeNode> blockNodes = new List<AstTreeNode>();
             AstTreeNode node = new BlockNode(null);
@@ -35,53 +35,53 @@ namespace HokumScript.Scripting
                 count++;
                 if (count > 1000) break; // Limit to 1000 iterations while in development
 
-                if (tokens[0].Type == ETokenType.RETURN)
+                if (tokens[0].Type == EScriptTokenType.RETURN)
                     tokens.RemoveAt(0); // Last value in block is returned by default
 
-                Token token = tokens[0];
+                ScriptToken scriptToken = tokens[0];
 
-                if (token.Type == ETokenType.NAME)
+                if (scriptToken.Type == EScriptTokenType.NAME)
                 {
                     node = new RootScopeMemberNode(
-                        new LiteralNode<string>(token.Value)
+                        new LiteralNode<string>(scriptToken.Value)
                     );
                     tokens.RemoveAt(0);
                 }
-                else if (token.Type == ETokenType.ASSIGN)
+                else if (scriptToken.Type == EScriptTokenType.ASSIGN)
                 {
-                    node = AssignmentNode.Parse(node, token, tokens);
+                    node = AssignmentNode.Parse(node, scriptToken, tokens);
                 }
-                else if (token.Type == ETokenType.IF)
+                else if (scriptToken.Type == EScriptTokenType.IF)
                 {
-                    node = IfStatementNode.Parse(node, token, tokens);
+                    node = IfStatementNode.Parse(node, scriptToken, tokens);
                     blockNodes.Add(node);
                     node = null;
                 }
-                else if (token.Type == ETokenType.FOR)
+                else if (scriptToken.Type == EScriptTokenType.FOR)
                 {
-                    node = ForStatementNode.Parse(node, token, tokens);
+                    node = ForStatementNode.Parse(node, scriptToken, tokens);
                     blockNodes.Add(node);
                     node = null;
                 }
-                else if (token.Type == ETokenType.STRING_LITERAL)
+                else if (scriptToken.Type == EScriptTokenType.STRING_LITERAL)
                 {
-                    node = new LiteralNode<string>(token.Value);
+                    node = new LiteralNode<string>(scriptToken.Value);
                     tokens.RemoveAt(0);
                 }
-                else if (token.Type == ETokenType.NUMBER_LITERAL)
+                else if (scriptToken.Type == EScriptTokenType.NUMBER_LITERAL)
                 {
-                    if (token.Value.Contains("."))
+                    if (scriptToken.Value.Contains("."))
                     {
-                        node = new FloatLiteralNode(token.Value);
+                        node = new FloatLiteralNode(scriptToken.Value);
                     }
                     else
                     {
-                        node = new IntegerLiteralNode(token.Value);    
+                        node = new IntegerLiteralNode(scriptToken.Value);    
                     }
                     
                     tokens.RemoveAt(0);
                 }
-                else if (token.Type == ETokenType.PERIOD && tokens[1].Type == ETokenType.NAME)
+                else if (scriptToken.Type == EScriptTokenType.PERIOD && tokens[1].Type == EScriptTokenType.NAME)
                 {
                     node = new ScopeMemberNode(
                         node,
@@ -90,12 +90,12 @@ namespace HokumScript.Scripting
                     tokens.RemoveAt(0);
                     tokens.RemoveAt(0);
                 }
-                else if (tokens[0].Type == ETokenType.L_PAREN)
+                else if (tokens[0].Type == EScriptTokenType.L_PAREN)
                 {
-                    List<List<Token>> funcArgs = GetBlockTokens(tokens);
+                    List<List<ScriptToken>> funcArgs = GetBlockTokens(tokens);
                     List<AstTreeNode> nodes = new List<AstTreeNode>();
                     ;
-                    foreach (List<Token> arg in funcArgs) {
+                    foreach (List<ScriptToken> arg in funcArgs) {
                         nodes.Add(ProcessTokens(arg));
                     }
                     node = new FunctionCallNode(
@@ -104,7 +104,7 @@ namespace HokumScript.Scripting
                     );
 
                 }
-                else if (tokens[0].Type == ETokenType.SEMI_COLON)
+                else if (tokens[0].Type == EScriptTokenType.SEMI_COLON)
                 {
                     if (node != null)
                     {
@@ -116,33 +116,33 @@ namespace HokumScript.Scripting
                 }
                 else if (ComparisonNode.Matches(tokens))
                 {
-                    node = ComparisonNode.Parse(node, token, tokens);
+                    node = ComparisonNode.Parse(node, scriptToken, tokens);
                 }
                 else if (ArithmeticNode.Matches(tokens))
                 {
-                    node = ArithmeticNode.Parse(node, token, tokens);
+                    node = ArithmeticNode.Parse(node, scriptToken, tokens);
                 }
                 else if (ArithmeticAssignmentNode.Matches(tokens))
                 {
-                    node = ArithmeticAssignmentNode.Parse(node, token, tokens);
+                    node = ArithmeticAssignmentNode.Parse(node, scriptToken, tokens);
                 }
-                else if (tokens[0].Type == ETokenType.WHITESPACE)
+                else if (tokens[0].Type == EScriptTokenType.WHITESPACE)
                 {
                     tokens.RemoveAt(0);
                 }
-                else if (tokens[0].Type == ETokenType.BOOLEAN_LITERAL)
+                else if (tokens[0].Type == EScriptTokenType.BOOLEAN_LITERAL)
                 {
                     node = new BooleanLiteralNode(tokens[0].Value);
                     tokens.RemoveAt(0);
                 }
-                else if (tokens[0].Type == ETokenType.NULL_LITERAL)
+                else if (tokens[0].Type == EScriptTokenType.NULL_LITERAL)
                 {
                     node = new LiteralNode<object>(null);
                     tokens.RemoveAt(0);
                 }
                 else
                 {
-                    string code = Tree.ToCode(tokens, 10);
+                    string code = ScriptTree.ToCode(tokens, 10);
                     Console.WriteLine($"Syntax Error.Near {code}");
                     
                 }
@@ -154,9 +154,9 @@ namespace HokumScript.Scripting
             return new BlockNode(blockNodes);
         }
 
-        public static List<Token> StripWhiteSpace(List<Token> tokens) {
+        public static List<ScriptToken> StripWhiteSpace(List<ScriptToken> tokens) {
             for (int i = 0; i < tokens.Count; i++) {
-                if (tokens[i].Type == ETokenType.WHITESPACE) {
+                if (tokens[i].Type == EScriptTokenType.WHITESPACE) {
                     tokens.RemoveAt(i);
                     i--;
                 }
@@ -164,19 +164,19 @@ namespace HokumScript.Scripting
             return tokens;
         }
         
-        public static List<Token> GetNextStatementTokens(List<Token> tokens, bool consumeSemicolon = true)
+        public static List<ScriptToken> GetNextStatementTokens(List<ScriptToken> tokens, bool consumeSemicolon = true)
         {
-            List<Token> statementTokens = new List<Token>();
-            List<ETokenType> openingBlocks = new List<ETokenType>();
-            openingBlocks.Add(ETokenType.L_BRACKET);
-            openingBlocks.Add(ETokenType.L_BRACE);
-            openingBlocks.Add(ETokenType.L_PAREN);
+            List<ScriptToken> statementTokens = new List<ScriptToken>();
+            List<EScriptTokenType> openingBlocks = new List<EScriptTokenType>();
+            openingBlocks.Add(EScriptTokenType.L_BRACKET);
+            openingBlocks.Add(EScriptTokenType.L_BRACE);
+            openingBlocks.Add(EScriptTokenType.L_PAREN);
             
-            List<ETokenType> closingBlocks = new List<ETokenType>();
-            closingBlocks.Add(ETokenType.SEMI_COLON);
-            closingBlocks.Add(ETokenType.R_BRACKET);
-            closingBlocks.Add(ETokenType.R_BRACE);
-            closingBlocks.Add(ETokenType.R_PAREN);
+            List<EScriptTokenType> closingBlocks = new List<EScriptTokenType>();
+            closingBlocks.Add(EScriptTokenType.SEMI_COLON);
+            closingBlocks.Add(EScriptTokenType.R_BRACKET);
+            closingBlocks.Add(EScriptTokenType.R_BRACE);
+            closingBlocks.Add(EScriptTokenType.R_PAREN);
 
             // Consume opening block
             if (openingBlocks.Contains(tokens[0].Type)) {
@@ -185,65 +185,65 @@ namespace HokumScript.Scripting
 
             int openParens = 0;
             for (int i = 0; i < tokens.Count; i++) {
-                Token token = tokens[i];
-                if (token.Type == ETokenType.L_PAREN)
+                ScriptToken scriptToken = tokens[i];
+                if (scriptToken.Type == EScriptTokenType.L_PAREN)
                     openParens++;
 
-                if (closingBlocks.Contains(token.Type)) {
-                    if (consumeSemicolon && token.Type != ETokenType.SEMI_COLON)
+                if (closingBlocks.Contains(scriptToken.Type)) {
+                    if (consumeSemicolon && scriptToken.Type != EScriptTokenType.SEMI_COLON)
                         tokens.RemoveAt(0); // Consume end of block
 
-                    if (openParens > 0 && token.Type == ETokenType.R_PAREN) {
+                    if (openParens > 0 && scriptToken.Type == EScriptTokenType.R_PAREN) {
                         openParens--;
                     } else {
                         break;
                     }
                 }
 
-                statementTokens.Add(token);
+                statementTokens.Add(scriptToken);
                 tokens.RemoveAt(0); // Consume part of statement
                 i--;
             }
             return statementTokens;
         }
         
-        public static List<List<Token>> GetBlockTokens(List<Token> tokens, EBlockType blockType = EBlockType.PAREN, bool groupByComma = true) {
-            ETokenType open = ETokenType.L_PAREN;
-            ETokenType close = ETokenType.R_PAREN;
+        public static List<List<ScriptToken>> GetBlockTokens(List<ScriptToken> tokens, EBlockType blockType = EBlockType.PAREN, bool groupByComma = true) {
+            EScriptTokenType open = EScriptTokenType.L_PAREN;
+            EScriptTokenType close = EScriptTokenType.R_PAREN;
             string closeSymbol = ")";
             
             switch(blockType) {
                 case EBlockType.BRACE:
-                    open = ETokenType.L_BRACE;
-                    close = ETokenType.R_BRACE;
+                    open = EScriptTokenType.L_BRACE;
+                    close = EScriptTokenType.R_BRACE;
                     closeSymbol = "}";
                     break;
                 case EBlockType.BRACKET:
-                    open = ETokenType.L_BRACKET;
-                    close = ETokenType.R_BRACKET;
+                    open = EScriptTokenType.L_BRACKET;
+                    close = EScriptTokenType.R_BRACKET;
                     closeSymbol = "]";
                     break;
             }
             
             int openBlocks = 0;
-            List<List<Token>> args = new List<List<Token>>();
-            List<Token> arg = new List<Token>();
+            List<List<ScriptToken>> args = new List<List<ScriptToken>>();
+            List<ScriptToken> arg = new List<ScriptToken>();
             
             for (int i = 0; i < tokens.Count; i++) {
-                Token token = tokens[i];
-                if (token.Type == open) {
+                ScriptToken scriptToken = tokens[i];
+                if (scriptToken.Type == open) {
                     openBlocks += 1;
                     if (openBlocks > 1)
-                        arg.Add(token);
-                } else if (token.Type == close) {
+                        arg.Add(scriptToken);
+                } else if (scriptToken.Type == close) {
                     openBlocks -= 1;
                     if (openBlocks > 0)
-                        arg.Add(token);
-                } else if (groupByComma && token.Type == ETokenType.COMMA && openBlocks == 1) {
+                        arg.Add(scriptToken);
+                } else if (groupByComma && scriptToken.Type == EScriptTokenType.COMMA && openBlocks == 1) {
                     args.Add(arg);
-                    arg = new List<Token>();
-                } else if (token.Type != ETokenType.WHITESPACE) {
-                    arg.Add(token);
+                    arg = new List<ScriptToken>();
+                } else if (scriptToken.Type != EScriptTokenType.WHITESPACE) {
+                    arg.Add(scriptToken);
                 }
 
                 // Consume token
@@ -260,7 +260,7 @@ namespace HokumScript.Scripting
             return null;
         }
 
-        public static string ToCode(List<Token> tokens, int count)
+        public static string ToCode(List<ScriptToken> tokens, int count)
         {
             return "";
         }

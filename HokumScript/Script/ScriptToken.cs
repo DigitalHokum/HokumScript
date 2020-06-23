@@ -1,28 +1,24 @@
 using System.Text.RegularExpressions;
 
-namespace HokumScript.Scripting
+namespace HokumScript.Script
 {
     public struct TokenPattern
     {
-        public readonly ETokenType Type;
+        public readonly EScriptTokenType Type;
         public readonly Regex Pattern;
 
-        public TokenPattern(ETokenType type, string regex)
+        public TokenPattern(EScriptTokenType type, string regex)
         {
             Type = type;
             Pattern = new Regex(regex);
         }
     }
 
-    public class Token
+    public class ScriptToken : Token<EScriptTokenType>
     {
-        public readonly ETokenType Type;
-        public readonly string Value;
-
-        public Token(ETokenType type, string value)
+        public ScriptToken(EScriptTokenType type, string value) : base(type, value)
         {
-            Type = type;
-            Value = value;
+            
         }
     }
 
@@ -32,7 +28,7 @@ namespace HokumScript.Scripting
         PAREN
     }
 
-    public enum ETokenType {
+    public enum EScriptTokenType {
         WHITESPACE,
         RETURN,
         OF,

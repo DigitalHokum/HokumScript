@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using HokumScript.Scripting;
+using HokumScript.Script;
 
 namespace HokumScript
 {
@@ -33,12 +33,12 @@ namespace HokumScript
     {
         public readonly AstTreeNode Left;
         public readonly AstTreeNode Right;
-        public readonly ETokenType Type;
+        public readonly EScriptTokenType Type;
 
         public ComparisonNode(
             AstTreeNode left,
             AstTreeNode right,
-            ETokenType type
+            EScriptTokenType type
         )
         {
             Left = left;
@@ -51,38 +51,38 @@ namespace HokumScript
             DynamicReturnValue right = await Right.Evaluate(scope);
 
             switch (Type) {
-                case ETokenType.EQUALS:
+                case EScriptTokenType.EQUALS:
                     return new DynamicReturnValue(left == right);
-                case ETokenType.NOT_EQUALS:
+                case EScriptTokenType.NOT_EQUALS:
                     return new DynamicReturnValue(left != right);
-                case ETokenType.GREATER_THAN:
+                case EScriptTokenType.GREATER_THAN:
                     return new DynamicReturnValue(left > right);
-                case ETokenType.LESS_THAN:
+                case EScriptTokenType.LESS_THAN:
                     return new DynamicReturnValue(left < right);
-                case ETokenType.GREATER_THAN_EQUAL:
+                case EScriptTokenType.GREATER_THAN_EQUAL:
                     return new DynamicReturnValue(left >= right);
-                case ETokenType.LESS_THAN_EQUAL:
+                case EScriptTokenType.LESS_THAN_EQUAL:
                     return new DynamicReturnValue(left <= right);
             }
 
             return new DynamicReturnValue(false);
         }
 
-        public static bool Matches(List<Token> tokens) {
-            List<ETokenType> types = new List<ETokenType>();
-            types.Add(ETokenType.EQUALS);
-            types.Add(ETokenType.NOT_EQUALS);
-            types.Add(ETokenType.GREATER_THAN);
-            types.Add(ETokenType.LESS_THAN);
-            types.Add(ETokenType.GREATER_THAN_EQUAL);
-            types.Add(ETokenType.LESS_THAN_EQUAL);
+        public static bool Matches(List<ScriptToken> tokens) {
+            List<EScriptTokenType> types = new List<EScriptTokenType>();
+            types.Add(EScriptTokenType.EQUALS);
+            types.Add(EScriptTokenType.NOT_EQUALS);
+            types.Add(EScriptTokenType.GREATER_THAN);
+            types.Add(EScriptTokenType.LESS_THAN);
+            types.Add(EScriptTokenType.GREATER_THAN_EQUAL);
+            types.Add(EScriptTokenType.LESS_THAN_EQUAL);
 
             return types.Contains(tokens[0].Type);
         }
 
-        public static ComparisonNode Parse(AstTreeNode lastNode, Token token, List<Token> tokens) {
+        public static ComparisonNode Parse(AstTreeNode lastNode, ScriptToken scriptToken, List<ScriptToken> tokens) {
             tokens.RemoveAt(0); // Remove comparison operator
-            return new ComparisonNode(lastNode, Tree.ProcessTokens(Tree.GetNextStatementTokens(tokens)), token.Type);
+            return new ComparisonNode(lastNode, ScriptTree.ProcessTokens(ScriptTree.GetNextStatementTokens(tokens)), scriptToken.Type);
         }
     }
 
@@ -271,16 +271,16 @@ namespace HokumScript
             return value;
         }
 
-        public static AssignmentNode Parse(AstTreeNode lastNode, Token token, List<Token> tokens) {
+        public static AssignmentNode Parse(AstTreeNode lastNode, ScriptToken scriptToken, List<ScriptToken> tokens) {
             if (!(lastNode is IScopeMemberNode)) {
                 Console.WriteLine("Invalid assignment syntax.");
                 return null;
             }
             tokens.RemoveAt(0); // consume =
-            List<Token> assignmentTokens = Tree.GetNextStatementTokens(tokens, false);
+            List<ScriptToken> assignmentTokens = ScriptTree.GetNextStatementTokens(tokens, false);
             return new AssignmentNode(
                 (IScopeMemberNode) lastNode,
-                Tree.ProcessTokens(assignmentTokens)
+                ScriptTree.ProcessTokens(assignmentTokens)
             );
         }
     }
@@ -309,10 +309,10 @@ namespace HokumScript
             return new DynamicReturnValue(null);
         }
 
-        public static ConditionalNode ParseConditional(List<Token> tokens) {
-            List<ETokenType> ifTokens = new List<ETokenType>();
-            ifTokens.Add(ETokenType.IF);
-            ifTokens.Add(ETokenType.ELSE_IF);
+        public static ConditionalNode ParseConditional(List<ScriptToken> tokens) {
+            List<EScriptTokenType> ifTokens = new List<EScriptTokenType>();
+            ifTokens.Add(EScriptTokenType.IF);
+            ifTokens.Add(EScriptTokenType.ELSE_IF);
             
             if (!ifTokens.Contains(tokens[0].Type))  {
                 Console.WriteLine("Invalid Syntax");
@@ -321,28 +321,28 @@ namespace HokumScript
 
             tokens.RemoveAt(0); // consume if and else if
             return new ConditionalNode(
-                Tree.ProcessTokens(Tree.GetBlockTokens(tokens, EBlockType.PAREN, false)[0]),
-                Tree.ProcessTokens(Tree.GetBlockTokens(tokens, EBlockType.BRACE, false)[0])
+                ScriptTree.ProcessTokens(ScriptTree.GetBlockTokens(tokens, EBlockType.PAREN, false)[0]),
+                ScriptTree.ProcessTokens(ScriptTree.GetBlockTokens(tokens, EBlockType.BRACE, false)[0])
             );
         }
 
-        public static IfStatementNode Parse(AstTreeNode lastNode, Token token, List<Token> tokens) {
-            if (tokens[1].Type != ETokenType.L_PAREN) {
+        public static IfStatementNode Parse(AstTreeNode lastNode, ScriptToken scriptToken, List<ScriptToken> tokens) {
+            if (tokens[1].Type != EScriptTokenType.L_PAREN) {
                 Console.WriteLine("If statement needs to be followed by a condition encased in parenthesis.");
                 return null;
             }
             List<ConditionalNode> nodes = new List<ConditionalNode>(); 
             nodes.Add(ParseConditional(tokens));
 
-            while(tokens.Count > 0 && ETokenType.ELSE_IF == tokens[0].Type) {
+            while(tokens.Count > 0 && EScriptTokenType.ELSE_IF == tokens[0].Type) {
                 nodes.Add(ParseConditional(tokens));
             }
 
-            if (tokens.Count > 0 && ETokenType.ELSE == tokens[0].Type) {
+            if (tokens.Count > 0 && EScriptTokenType.ELSE == tokens[0].Type) {
                 tokens.RemoveAt(0); // Consume else
                 nodes.Add(new ConditionalNode(
                     new LiteralNode<bool>(true),
-                    Tree.ProcessTokens(Tree.GetBlockTokens(tokens, EBlockType.BRACE, false)[0])
+                    ScriptTree.ProcessTokens(ScriptTree.GetBlockTokens(tokens, EBlockType.BRACE, false)[0])
                 ));
             }
 
@@ -423,27 +423,27 @@ namespace HokumScript
             return new DynamicReturnValue(null);
         }
 
-        public static ForStatementNode Parse(AstTreeNode lastNode, Token token, List<Token> tokens)
+        public static ForStatementNode Parse(AstTreeNode lastNode, ScriptToken scriptToken, List<ScriptToken> tokens)
         {
-            if (tokens[1].Type != ETokenType.L_PAREN)
+            if (tokens[1].Type != EScriptTokenType.L_PAREN)
             {
                 Console.WriteLine("Syntax error: Missing ('");
                 return null;
             }
 
-            if (tokens[3].Type != ETokenType.OF)
+            if (tokens[3].Type != EScriptTokenType.OF)
             {
                 Console.WriteLine("Syntax error: Missing of");
                 return null;
             }
 
             tokens.RemoveAt(0); // consume for
-            List<Token> loopDef = Tree.GetNextStatementTokens(tokens);
-            Token variableName = loopDef[0];
+            List<ScriptToken> loopDef = ScriptTree.GetNextStatementTokens(tokens);
+            ScriptToken variableName = loopDef[0];
             loopDef.RemoveAt(0);
             loopDef.RemoveAt(0); // consume of
-            AstTreeNode list = Tree.ProcessTokens(loopDef);
-            AstTreeNode block = Tree.ProcessTokens(Tree.GetBlockTokens(tokens, EBlockType.BRACE, false)[0]);
+            AstTreeNode list = ScriptTree.ProcessTokens(loopDef);
+            AstTreeNode block = ScriptTree.ProcessTokens(ScriptTree.GetBlockTokens(tokens, EBlockType.BRACE, false)[0]);
 
             return new ForStatementNode(
                 new LiteralNode<string>(variableName.Value),
@@ -457,12 +457,12 @@ namespace HokumScript
     {
         public readonly AstTreeNode Left;
         public readonly AstTreeNode Right;
-        public readonly ETokenType Type;
+        public readonly EScriptTokenType Type;
 
         ArithmeticNode(
             AstTreeNode left,
             AstTreeNode right,
-            ETokenType type
+            EScriptTokenType type
         )
         {
             Left = left;
@@ -481,13 +481,13 @@ namespace HokumScript
             {
                 switch (Type)
                 {
-                    case ETokenType.ADD:
+                    case EScriptTokenType.ADD:
                         return new DynamicReturnValue(left.GetValue<int>() + right.GetValue<int>());
-                    case ETokenType.SUBTRACT:
+                    case EScriptTokenType.SUBTRACT:
                         return new DynamicReturnValue(left.GetValue<int>() - right.GetValue<int>());
-                    case ETokenType.MULTIPLY:
+                    case EScriptTokenType.MULTIPLY:
                         return new DynamicReturnValue(left.GetValue<int>() * right.GetValue<int>());
-                    case ETokenType.DIVIDE:
+                    case EScriptTokenType.DIVIDE:
                         return new DynamicReturnValue(left.GetValue<int>() / right.GetValue<int>());
                 }            
             }
@@ -502,13 +502,13 @@ namespace HokumScript
 
                 switch (Type)
                 {
-                    case ETokenType.ADD:
+                    case EScriptTokenType.ADD:
                         return new DynamicReturnValue(leftValue + rightValue);
-                    case ETokenType.SUBTRACT:
+                    case EScriptTokenType.SUBTRACT:
                         return new DynamicReturnValue(leftValue - rightValue);
-                    case ETokenType.MULTIPLY:
+                    case EScriptTokenType.MULTIPLY:
                         return new DynamicReturnValue(leftValue * rightValue);
-                    case ETokenType.DIVIDE:
+                    case EScriptTokenType.DIVIDE:
                         return new DynamicReturnValue(leftValue / rightValue);
                 }
             }
@@ -516,20 +516,20 @@ namespace HokumScript
             return new DynamicReturnValue(null);
         }
 
-        public static bool Matches(List<Token> tokens) {
-            List<ETokenType> types = new List<ETokenType>
+        public static bool Matches(List<ScriptToken> tokens) {
+            List<EScriptTokenType> types = new List<EScriptTokenType>
             {
-                ETokenType.ADD,
-                ETokenType.SUBTRACT,
-                ETokenType.MULTIPLY,
-                ETokenType.DIVIDE
+                EScriptTokenType.ADD,
+                EScriptTokenType.SUBTRACT,
+                EScriptTokenType.MULTIPLY,
+                EScriptTokenType.DIVIDE
             };
             return types.Contains(tokens[0].Type);
         }
 
-        public static ArithmeticNode Parse(AstTreeNode lastNode, Token token, List<Token> tokens) {
+        public static ArithmeticNode Parse(AstTreeNode lastNode, ScriptToken scriptToken, List<ScriptToken> tokens) {
             tokens.RemoveAt(0); // Remove arithmetic operator
-            return new ArithmeticNode(lastNode, Tree.ProcessTokens(Tree.GetNextStatementTokens(tokens)), token.Type);
+            return new ArithmeticNode(lastNode, ScriptTree.ProcessTokens(ScriptTree.GetNextStatementTokens(tokens)), scriptToken.Type);
         }
     }
 
@@ -537,12 +537,12 @@ namespace HokumScript
     {
         public readonly IScopeMemberNode Left;
         public readonly AstTreeNode Right;
-        public readonly ETokenType Type;
+        public readonly EScriptTokenType Type;
 
         public ArithmeticAssignmentNode(
             IScopeMemberNode left,
             AstTreeNode right,
-            ETokenType type
+            EScriptTokenType type
         )
         {
             Left = left;
@@ -557,16 +557,16 @@ namespace HokumScript
             float value = 0;
 
             switch (Type) {
-                case ETokenType.ADD_ASSIGN:
+                case EScriptTokenType.ADD_ASSIGN:
                     value = left.GetValue<float>() + right.GetValue<float>();
                     break;
-                case ETokenType.SUBTRACT_ASSIGN:
+                case EScriptTokenType.SUBTRACT_ASSIGN:
                     value = left.GetValue<float>() - right.GetValue<float>();
                     break;
-                case ETokenType.MULTIPLY_ASSIGN:
+                case EScriptTokenType.MULTIPLY_ASSIGN:
                     value = left.GetValue<float>() * right.GetValue<float>();
                     break;
-                case ETokenType.DIVIDE_ASSIGN:
+                case EScriptTokenType.DIVIDE_ASSIGN:
                     value = left.GetValue<float>()/ right.GetValue<float>();
                     break;
             }
@@ -583,26 +583,26 @@ namespace HokumScript
             return new DynamicReturnValue(value);
         }
 
-        public static bool Matches(List<Token> tokens) {
-            List<ETokenType> types = new List<ETokenType>();
-            types.Add(ETokenType.ADD_ASSIGN);
-            types.Add(ETokenType.SUBTRACT_ASSIGN);
-            types.Add(ETokenType.MULTIPLY_ASSIGN);
-            types.Add(ETokenType.DIVIDE_ASSIGN);
+        public static bool Matches(List<ScriptToken> tokens) {
+            List<EScriptTokenType> types = new List<EScriptTokenType>();
+            types.Add(EScriptTokenType.ADD_ASSIGN);
+            types.Add(EScriptTokenType.SUBTRACT_ASSIGN);
+            types.Add(EScriptTokenType.MULTIPLY_ASSIGN);
+            types.Add(EScriptTokenType.DIVIDE_ASSIGN);
             return types.Contains(tokens[0].Type);
         }
 
-        public static ArithmeticAssignmentNode Parse(AstTreeNode lastNode, Token token, List<Token> tokens) {
+        public static ArithmeticAssignmentNode Parse(AstTreeNode lastNode, ScriptToken scriptToken, List<ScriptToken> tokens) {
             if (lastNode == null || !(lastNode is IScopeMemberNode)) {
                 Console.WriteLine("Invalid assignment syntax.");
                 return null;
             }
             tokens.RemoveAt(0); // consume +=
-            List<Token> assignmentTokens = Tree.GetNextStatementTokens(tokens);
+            List<ScriptToken> assignmentTokens = ScriptTree.GetNextStatementTokens(tokens);
             return new ArithmeticAssignmentNode(
                 (IScopeMemberNode) Convert.ChangeType(lastNode, lastNode is RootScopeMemberNode ? typeof(RootScopeMemberNode) : typeof(ScopeMemberNode)),
-                Tree.ProcessTokens(assignmentTokens),
-                token.Type
+                ScriptTree.ProcessTokens(assignmentTokens),
+                scriptToken.Type
             );
         }
     }

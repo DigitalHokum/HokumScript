@@ -1,0 +1,9 @@
+{% if (something) { %}
+First condition text.
+{% } else { %}
+Second condition text.
+{% } %}
+
+{% some_function(some_var); %}
+
+{% a = 15; %}
