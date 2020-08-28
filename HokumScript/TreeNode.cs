@@ -452,9 +452,17 @@ namespace HokumScript
             );
         }
     }
-    
+
     public class ArithmeticNode : AstTreeNode
     {
+        public static readonly List<EScriptTokenType> ArithmeticTypes = new List<EScriptTokenType>
+        {
+            EScriptTokenType.ADD,
+            EScriptTokenType.SUBTRACT,
+            EScriptTokenType.MULTIPLY,
+            EScriptTokenType.DIVIDE
+        };
+        
         public readonly AstTreeNode Left;
         public readonly AstTreeNode Right;
         public readonly EScriptTokenType Type;
@@ -517,14 +525,7 @@ namespace HokumScript
         }
 
         public static bool Matches(List<ScriptToken> tokens) {
-            List<EScriptTokenType> types = new List<EScriptTokenType>
-            {
-                EScriptTokenType.ADD,
-                EScriptTokenType.SUBTRACT,
-                EScriptTokenType.MULTIPLY,
-                EScriptTokenType.DIVIDE
-            };
-            return types.Contains(tokens[0].Type);
+            return ArithmeticTypes.Contains(tokens[0].Type);
         }
 
         public static ArithmeticNode Parse(AstTreeNode lastNode, ScriptToken scriptToken, List<ScriptToken> tokens) {

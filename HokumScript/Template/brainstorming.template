@@ -1,8 +1,8 @@
-{% if (something) { %}
+{% if (something) %}
 First condition text.
-{% } else { %}
+{% else %}
 Second condition text.
-{% } %}
+{% endif %}
 
 {% some_function(some_var); %}
 

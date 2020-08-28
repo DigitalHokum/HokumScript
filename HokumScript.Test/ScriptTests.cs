@@ -185,6 +185,20 @@ namespace HokumScript.Test
         }
         
         [Fact]
+        public async Task TestArithmeticOrderOfOperations()
+        {
+            ScriptTree scriptTree = new ScriptTree("foo = 150 + 5.0 / 5 + 1");
+            Scope scope = new Scope();
+            await scriptTree.Evaluate(scope);
+            Assert.Equal(152.0f, scope.Get("foo"));
+            
+            scriptTree = new ScriptTree("foo = 5 * 5 + 2 * 5");
+            scope = new Scope();
+            await scriptTree.Evaluate(scope);
+            Assert.Equal(35, scope.Get("foo"));
+        }
+        
+        [Fact]
         public async Task TestIfStatementNode()
         {
             ScriptTree scriptTree = new ScriptTree(@"
@@ -225,7 +239,7 @@ namespace HokumScript.Test
                     foo = var;
                 }
             ");
-           
+
             await scriptTree.Evaluate(scope);
             Assert.Equal(46.0f, innerScope.Get("foo"));
             Assert.Equal(9.0f, scope.Get("foo"));

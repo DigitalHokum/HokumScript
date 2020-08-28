@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace HokumScript.Script
 {
-    public class ScriptTree
+    public class ScriptTree : Tree
     {
         public readonly string Code;
         public readonly List<ScriptToken> Tokens;
@@ -71,27 +71,32 @@ namespace HokumScript.Script
                 }
                 else if (scriptToken.Type == EScriptTokenType.NUMBER_LITERAL)
                 {
+                    AstTreeNode _node;
                     if (scriptToken.Value.Contains("."))
                     {
-                        node = new FloatLiteralNode(scriptToken.Value);
+                        _node = new FloatLiteralNode(scriptToken.Value);
                     }
                     else
                     {
-                        node = new IntegerLiteralNode(scriptToken.Value);    
+                        _node = new IntegerLiteralNode(scriptToken.Value);    
                     }
-                    
+
+                    node = _node;
                     tokens.RemoveAt(0);
                 }
-                else if (scriptToken.Type == EScriptTokenType.PERIOD && tokens[1].Type == EScriptTokenType.NAME)
+                else if (scriptToken.Type == EScriptTokenType.PERIOD)
                 {
-                    node = new ScopeMemberNode(
-                        node,
-                        new LiteralNode<string>(tokens[1].Value)
-                    );
-                    tokens.RemoveAt(0);
-                    tokens.RemoveAt(0);
+                    if (tokens[1].Type == EScriptTokenType.NAME)
+                    {
+                        node = new ScopeMemberNode(
+                            node,
+                            new LiteralNode<string>(tokens[1].Value)
+                        );
+                        tokens.RemoveAt(0);
+                        tokens.RemoveAt(0);
+                    }
                 }
-                else if (tokens[0].Type == EScriptTokenType.L_PAREN)
+                else if (scriptToken.Type == EScriptTokenType.L_PAREN)
                 {
                     List<List<ScriptToken>> funcArgs = GetBlockTokens(tokens);
                     List<AstTreeNode> nodes = new List<AstTreeNode>();
@@ -105,7 +110,7 @@ namespace HokumScript.Script
                     );
 
                 }
-                else if (tokens[0].Type == EScriptTokenType.SEMI_COLON)
+                else if (scriptToken.Type == EScriptTokenType.SEMI_COLON)
                 {
                     if (node != null)
                     {
@@ -121,22 +126,23 @@ namespace HokumScript.Script
                 }
                 else if (ArithmeticNode.Matches(tokens))
                 {
-                    node = ArithmeticNode.Parse(node, scriptToken, tokens);
+                    AstTreeNode _node = ArithmeticNode.Parse(node, scriptToken, tokens);
+                    node = _node;
                 }
                 else if (ArithmeticAssignmentNode.Matches(tokens))
                 {
                     node = ArithmeticAssignmentNode.Parse(node, scriptToken, tokens);
                 }
-                else if (tokens[0].Type == EScriptTokenType.WHITESPACE)
+                else if (scriptToken.Type == EScriptTokenType.WHITESPACE)
                 {
                     tokens.RemoveAt(0);
                 }
-                else if (tokens[0].Type == EScriptTokenType.BOOLEAN_LITERAL)
+                else if (scriptToken.Type == EScriptTokenType.BOOLEAN_LITERAL)
                 {
                     node = new BooleanLiteralNode(tokens[0].Value);
                     tokens.RemoveAt(0);
                 }
-                else if (tokens[0].Type == EScriptTokenType.NULL_LITERAL)
+                else if (scriptToken.Type == EScriptTokenType.NULL_LITERAL)
                 {
                     node = new LiteralNode<object>(null);
                     tokens.RemoveAt(0);
@@ -145,7 +151,6 @@ namespace HokumScript.Script
                 {
                     string code = ScriptTree.ToCode(tokens, 10);
                     Console.WriteLine($"Syntax Error.Near {code}");
-                    
                 }
             }
 
