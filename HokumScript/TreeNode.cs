@@ -8,7 +8,7 @@ namespace HokumScript
     public interface AstTreeNode {
         Task<DynamicReturnValue> Evaluate(Scope scope);
     }
-    
+
     public class BlockNode : AstTreeNode
     {
         public readonly List<AstTreeNode> Statements;
@@ -28,7 +28,7 @@ namespace HokumScript
             return returnValue;
         }
     }
-    
+
     class ComparisonNode : AstTreeNode
     {
         public readonly AstTreeNode Left;
@@ -90,7 +90,7 @@ namespace HokumScript
     {
         public readonly AstTreeNode Condition;
         public readonly BlockNode Block;
-        
+
         public ConditionalNode(AstTreeNode condition, BlockNode block)
         {
             Condition = condition;
@@ -106,7 +106,7 @@ namespace HokumScript
             return returnValue;
         }
     }
-    
+
     public class LiteralNode<T> : AstTreeNode
     {
         public readonly T Value;
@@ -128,7 +128,7 @@ namespace HokumScript
     class BooleanLiteralNode : LiteralNode<bool>
     {
         public BooleanLiteralNode(string value) : base(value == "true") {}
-        
+
         public override async Task<DynamicReturnValue> Evaluate(Scope scope)
         {
             bool value = await Task.Run(() => Value);
@@ -145,7 +145,7 @@ namespace HokumScript
             return new DynamicReturnValue(value);
         }
     }
-    
+
     public class FloatLiteralNode : LiteralNode<float> {
         public FloatLiteralNode(string value) : base(float.Parse(value)) { }
         public override async Task<DynamicReturnValue> Evaluate(Scope scope)
@@ -154,7 +154,7 @@ namespace HokumScript
             return new DynamicReturnValue(value);
         }
     }
-    
+
     public class StringNode : AstTreeNode
     {
         public readonly AstTreeNode Node;
@@ -209,13 +209,13 @@ namespace HokumScript
         {
             return (await Name.Evaluate(scope)).GetValue<string>();
         }
-        
+
         public async Task<Scope> GetScope(Scope scope)
         {
             return (await Scope.Evaluate(scope)).GetValue<Scope>();
         }
     }
-    
+
     public class RootScopeMemberNode : AstTreeNode, IScopeMemberNode {
         public readonly AstTreeNode Name;
 
@@ -236,13 +236,13 @@ namespace HokumScript
         {
             return (await Name.Evaluate(scope)).GetValue<string>();
         }
-        
+
         public async Task<Scope> GetScope(Scope scope)
         {
             return await Task.Run(() => scope);
         }
     }
-    
+
     public class AssignmentNode : AstTreeNode
     {
         public readonly IScopeMemberNode RootNode;
@@ -263,11 +263,11 @@ namespace HokumScript
             DynamicReturnValue value = await ToAssign.Evaluate(scope);
 
             Scope innerScope = await RootNode.GetScope(scope);            
-            
+
             innerScope.Set(name, value.Value);
             if (innerScope.Get(name) != value.Value)
                 Console.WriteLine($"System Error: Failed to assign ${name} to ${value}");   
-            
+
             return value;
         }
 
@@ -284,11 +284,11 @@ namespace HokumScript
             );
         }
     }
-    
+
     public class IfStatementNode : AstTreeNode
     {
         protected List<ConditionalNode> Nodes;
-        
+
         public IfStatementNode(
             List<ConditionalNode> nodes
         )
@@ -305,7 +305,7 @@ namespace HokumScript
                     return dose;
                 }
             }
-            
+
             return new DynamicReturnValue(null);
         }
 
@@ -313,7 +313,7 @@ namespace HokumScript
             List<EScriptTokenType> ifTokens = new List<EScriptTokenType>();
             ifTokens.Add(EScriptTokenType.IF);
             ifTokens.Add(EScriptTokenType.ELSE_IF);
-            
+
             if (!ifTokens.Contains(tokens[0].Type))  {
                 Console.WriteLine("Invalid Syntax");
                 return null;
@@ -349,7 +349,7 @@ namespace HokumScript
             return new IfStatementNode(nodes);
         }
     }
-    
+
     public class FunctionCallNode<T> : AstTreeNode
     {
         public readonly AstTreeNode Function;
@@ -462,7 +462,7 @@ namespace HokumScript
             EScriptTokenType.MULTIPLY,
             EScriptTokenType.DIVIDE
         };
-        
+
         public readonly AstTreeNode Left;
         public readonly AstTreeNode Right;
         public readonly EScriptTokenType Type;
@@ -481,10 +481,10 @@ namespace HokumScript
         public async Task<DynamicReturnValue> Evaluate(Scope scope) {
             DynamicReturnValue left = await Left.Evaluate(scope);
             DynamicReturnValue right = await Right.Evaluate(scope);
-            
+
             Type leftType = left.Type;
             Type rightType = right.Type;
-            
+
             if (leftType == typeof(int) && rightType == typeof(int))
             {
                 switch (Type)
@@ -607,7 +607,7 @@ namespace HokumScript
             );
         }
     }
-    
+
     public class FunctionArgumentNode : AstTreeNode
     {
         protected List<AstTreeNode> Args;
@@ -627,7 +627,7 @@ namespace HokumScript
             return new DynamicReturnValue(arguments.ToArray());
         }
     }
-    
+
     public class FunctionCallNode : AstTreeNode
     {
         public readonly AstTreeNode Fnc;
