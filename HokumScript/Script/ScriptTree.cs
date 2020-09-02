@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using HokumScript.Script.Nodes;
 
 namespace HokumScript.Script
 {
@@ -169,8 +170,8 @@ namespace HokumScript.Script
             }
             return tokens;
         }
-        
-        public static List<ScriptToken> GetNextStatementTokens(List<ScriptToken> tokens, bool consumeSemicolon = true)
+
+        public static List<ScriptToken> GetNextStatementTokens(List<ScriptToken> tokens, bool consumeSemicolon = true, bool consumeOpener = false)
         {
             List<ScriptToken> statementTokens = new List<ScriptToken>();
             List<EScriptTokenType> openingBlocks = new List<EScriptTokenType>();
@@ -183,9 +184,9 @@ namespace HokumScript.Script
             closingBlocks.Add(EScriptTokenType.R_BRACKET);
             closingBlocks.Add(EScriptTokenType.R_BRACE);
             closingBlocks.Add(EScriptTokenType.R_PAREN);
-
+            
             // Consume opening block
-            if (openingBlocks.Contains(tokens[0].Type)) {
+            if (consumeOpener && openingBlocks.Contains(tokens[0].Type)) {
                 tokens.RemoveAt(0);
             }
 
@@ -212,7 +213,7 @@ namespace HokumScript.Script
             }
             return statementTokens;
         }
-        
+
         public static List<List<ScriptToken>> GetBlockTokens(List<ScriptToken> tokens, EBlockType blockType = EBlockType.PAREN, bool groupByComma = true) {
             EScriptTokenType open = EScriptTokenType.L_PAREN;
             EScriptTokenType close = EScriptTokenType.R_PAREN;

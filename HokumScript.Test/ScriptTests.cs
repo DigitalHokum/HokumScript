@@ -152,7 +152,7 @@ namespace HokumScript.Test
             scope = new Scope();
             await scriptTree.Evaluate(scope);
             Assert.Equal(155, scope.Get("foo"));
-            
+
             scriptTree = new ScriptTree("foo = 150 - 5.0");
             scope = new Scope();
             await scriptTree.Evaluate(scope);
@@ -162,42 +162,47 @@ namespace HokumScript.Test
             scope = new Scope();
             await scriptTree.Evaluate(scope);
             Assert.Equal(145, scope.Get("foo"));
-            
+
             scriptTree = new ScriptTree("foo = 150 * 5.0");
             scope = new Scope();
             await scriptTree.Evaluate(scope);
             Assert.Equal(750f, scope.Get("foo"));
-            
+
             scriptTree = new ScriptTree("foo = 150 * 5");
             scope = new Scope();
             await scriptTree.Evaluate(scope);
             Assert.Equal(750, scope.Get("foo"));
-            
+
             scriptTree = new ScriptTree("foo = 150 / 5.0");
             scope = new Scope();
             await scriptTree.Evaluate(scope);
             Assert.Equal(30f, scope.Get("foo"));
-            
+
             scriptTree = new ScriptTree("foo = 150 / 5");
             scope = new Scope();
             await scriptTree.Evaluate(scope);
             Assert.Equal(30, scope.Get("foo"));
         }
-        
+
         [Fact]
         public async Task TestArithmeticOrderOfOperations()
         {
-            ScriptTree scriptTree = new ScriptTree("foo = 150 + 5.0 / 5 + 1");
+            ScriptTree scriptTree = new ScriptTree("foo = 1 + (5 + 1) * 2");
             Scope scope = new Scope();
             await scriptTree.Evaluate(scope);
+            Assert.Equal(12.0f, scope.Get("foo"));
+
+            scriptTree = new ScriptTree("foo = 150 + 5.0 / 5 + 1");
+            scope = new Scope();
+            await scriptTree.Evaluate(scope);
             Assert.Equal(152.0f, scope.Get("foo"));
-            
+
             scriptTree = new ScriptTree("foo = 5 * 5 + 2 * 5");
             scope = new Scope();
             await scriptTree.Evaluate(scope);
             Assert.Equal(35, scope.Get("foo"));
         }
-        
+
         [Fact]
         public async Task TestIfStatementNode()
         {
@@ -217,7 +222,7 @@ namespace HokumScript.Test
             Console.WriteLine($"Result it Type {scope.GetType("result")}");
             Assert.Equal(true, scope.Get("result"));
         }
-        
+
         [Fact]
         public async Task TestForStatementNode()
         {
@@ -230,7 +235,7 @@ namespace HokumScript.Test
             }
             scope.Set("loopTest", loopTest);
             scope.Set("test", innerScope);
-            
+
             ScriptTree scriptTree = new ScriptTree(@"
                 test.foo = 1.0;
                 foo = 1.0;
@@ -239,10 +244,25 @@ namespace HokumScript.Test
                     foo = var;
                 }
             ");
-
+            
             await scriptTree.Evaluate(scope);
             Assert.Equal(46.0f, innerScope.Get("foo"));
             Assert.Equal(9.0f, scope.Get("foo"));
+        }
+        
+        [Fact]
+        public async Task TestForStatementNodeWithInlineArray()
+        {
+            ScriptTree scriptTree = new ScriptTree(@"
+                test = 0;
+                for (var of [1, 2, 3, 4, 5, 6]) {
+                    test += var;
+                }
+            ");
+
+            Scope scope = new Scope();
+            await scriptTree.Evaluate(scope);
+            Assert.Equal(21, scope.Get("test"));
         }
 
         [Fact]
@@ -257,7 +277,7 @@ namespace HokumScript.Test
             DynamicReturnValue r = await scriptTree.Evaluate(scope);
             Assert.Equal(words, r.GetValue<string>());
         }
-        
+
         [Fact]
         public async Task TestFunctionMultipleArgumentsCallNode()
         {
@@ -270,7 +290,7 @@ namespace HokumScript.Test
             DynamicReturnValue r = await scriptTree.Evaluate(scope);
             Assert.Equal($"{words} Cheese is also rather tasty.", r.GetValue<string>());
         }
-        
+
         [Fact]
         public async Task TestAsyncFunctionCallNode()
         {
