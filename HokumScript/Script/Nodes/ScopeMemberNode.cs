@@ -26,6 +26,7 @@ namespace HokumScript.Script.Nodes
                 return new DynamicReturnValue(null);
             }
             string name = await GetName(scope);
+            Type t = parent.GetValue<Scope>().GetType(name);
             return new DynamicReturnValue(parent.GetValue<Scope>().Get(name));
         }
 

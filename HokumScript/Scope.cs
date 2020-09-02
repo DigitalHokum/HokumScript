@@ -6,6 +6,7 @@ namespace HokumScript
     public class Scope
     {
         private Dictionary<string, object> data = new Dictionary<string, object>();
+        private Dictionary<string, Type> types = new Dictionary<string, Type>();
 
         public void Unset(string key)
         {
@@ -32,7 +33,7 @@ namespace HokumScript
                 return !data.ContainsKey(key) ? null : data[key];
             }
         }
-        
+
         public T Get<T>(string key)
         {
             lock (data)

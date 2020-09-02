@@ -32,13 +32,20 @@ namespace HokumScript.Script.Nodes
             string variable = (await Variable.Evaluate(scope)).GetValue<string>();
 
             DynamicReturnValue value = (await Array.Evaluate(scope));
-            Type type = value.Value.GetType();
+            Type type = value.Type;
 
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
             {
                 if (type == typeof(List<float>))
                 {
                     foreach (float val in value.GetValue<List<float>>())
+                    {
+                        await EvaluateBlock(scope, variable, val);
+                    }
+                }
+                else if (type == typeof(List<int>))
+                {
+                    foreach (int val in value.GetValue<List<int>>())
                     {
                         await EvaluateBlock(scope, variable, val);
                     }
@@ -70,8 +77,7 @@ namespace HokumScript.Script.Nodes
             }
 
             tokens.RemoveAt(0); // consume for
-            tokens.RemoveAt(0); // consume opening paren
-            List<ScriptToken> loopDef = ScriptTree.GetNextStatementTokens(tokens);
+            List<ScriptToken> loopDef = ScriptTree.GetEnclosedTokens(tokens);
             ScriptToken variableName = loopDef[0];
             loopDef.RemoveAt(0); // consume variable name
             loopDef.RemoveAt(0); // consume of

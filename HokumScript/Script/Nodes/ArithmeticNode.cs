@@ -81,7 +81,7 @@ namespace HokumScript.Script.Nodes
 
         public static ArithmeticNode Parse(AstTreeNode lastNode, ScriptToken scriptToken, List<ScriptToken> tokens) {
             tokens.RemoveAt(0); // Remove arithmetic operator
-            return new ArithmeticNode(lastNode, ScriptTree.ProcessTokens(ScriptTree.GetNextStatementTokens(tokens)), scriptToken.Type);
+            return new ArithmeticNode(lastNode, ScriptTree.ProcessTokens(ScriptTree.GetEnclosedTokens(tokens)), scriptToken.Type);
         }
     }
 }

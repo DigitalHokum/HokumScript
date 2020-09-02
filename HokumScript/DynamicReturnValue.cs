@@ -35,7 +35,7 @@ namespace HokumScript
         public DynamicReturnValue(object value, Type type = null)
         {
             _value = value;
-            Type = type;
+            Type = type == null ? value.GetType() : null;
         }
 
         public override bool Equals(object obj)

@@ -14,6 +14,9 @@ namespace HokumScript.Script.Nodes
 
         public async Task<DynamicReturnValue> Evaluate(Scope scope) {
             DynamicReturnValue returnValue = new DynamicReturnValue(null);
+
+            if (Statements == null)
+                return returnValue;
             
             for (int i = 0; i < Statements.Count; i++) {
                 returnValue = await Statements[i].Evaluate(scope);

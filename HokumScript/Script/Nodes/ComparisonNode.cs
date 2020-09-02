@@ -56,7 +56,7 @@ namespace HokumScript.Script.Nodes
 
         public static ComparisonNode Parse(AstTreeNode lastNode, ScriptToken scriptToken, List<ScriptToken> tokens) {
             tokens.RemoveAt(0); // Remove comparison operator
-            return new ComparisonNode(lastNode, ScriptTree.ProcessTokens(ScriptTree.GetNextStatementTokens(tokens)), scriptToken.Type);
+            return new ComparisonNode(lastNode, ScriptTree.ProcessTokens(ScriptTree.GetEnclosedTokens(tokens)), scriptToken.Type);
         }
     }
 }

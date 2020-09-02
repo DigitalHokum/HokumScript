@@ -38,7 +38,7 @@ namespace HokumScript.Script.Nodes
                 return null;
             }
             tokens.RemoveAt(0); // consume =
-            List<ScriptToken> assignmentTokens = ScriptTree.GetNextStatementTokens(tokens, false);
+            List<ScriptToken> assignmentTokens = ScriptTree.GetStatementTokens(tokens, false);
             return new AssignmentNode(
                 (IScopeMemberNode) lastNode,
                 ScriptTree.ProcessTokens(assignmentTokens)

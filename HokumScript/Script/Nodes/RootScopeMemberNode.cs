@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 
 namespace HokumScript.Script.Nodes
@@ -15,6 +16,7 @@ namespace HokumScript.Script.Nodes
         public async Task<DynamicReturnValue> Evaluate(Scope scope)
         {
             string key = await GetName(scope);
+            Type t = scope.GetType(key);
             return new DynamicReturnValue(scope.Get(key));
         }
 

@@ -97,6 +97,17 @@ namespace HokumScript.Script
                         tokens.RemoveAt(0);
                     }
                 }
+                else if (scriptToken.Type == EScriptTokenType.L_BRACKET)
+                {
+                    if (node.GetType() == typeof(RootScopeMemberNode))
+                    {
+                        // indice
+                    }
+                    else
+                    {
+                        node = ArrayNode.Parse(node, scriptToken, tokens);
+                    }
+                }
                 else if (scriptToken.Type == EScriptTokenType.L_PAREN)
                 {
                     List<List<ScriptToken>> funcArgs = GetBlockTokens(tokens);
@@ -171,40 +182,82 @@ namespace HokumScript.Script
             return tokens;
         }
 
-        public static List<ScriptToken> GetNextStatementTokens(List<ScriptToken> tokens, bool consumeSemicolon = true, bool consumeOpener = false)
+        public static List<ScriptToken> GetEnclosedTokens(List<ScriptToken> tokens, bool consumeEnclosingTokens = true)
         {
             List<ScriptToken> statementTokens = new List<ScriptToken>();
             List<EScriptTokenType> openingBlocks = new List<EScriptTokenType>();
             openingBlocks.Add(EScriptTokenType.L_BRACKET);
             openingBlocks.Add(EScriptTokenType.L_BRACE);
             openingBlocks.Add(EScriptTokenType.L_PAREN);
-            
+
             List<EScriptTokenType> closingBlocks = new List<EScriptTokenType>();
             closingBlocks.Add(EScriptTokenType.SEMI_COLON);
             closingBlocks.Add(EScriptTokenType.R_BRACKET);
             closingBlocks.Add(EScriptTokenType.R_BRACE);
             closingBlocks.Add(EScriptTokenType.R_PAREN);
-            
+
             // Consume opening block
-            if (consumeOpener && openingBlocks.Contains(tokens[0].Type)) {
+            bool hadOpeningBlock = false;
+            EScriptTokenType openingBlockType = tokens[0].Type;
+            EScriptTokenType closingBlockType = EScriptTokenType.R_PAREN;
+            if (consumeEnclosingTokens && openingBlocks.Contains(tokens[0].Type)) {
                 tokens.RemoveAt(0);
+                hadOpeningBlock = true;
+                
+                switch (openingBlockType)
+                {
+                    case EScriptTokenType.L_BRACE:
+                        closingBlockType = EScriptTokenType.R_BRACE;
+                        break;
+                    case EScriptTokenType.L_BRACKET:
+                        closingBlockType = EScriptTokenType.R_BRACKET;
+                        break;
+                }
             }
 
             int openParens = 0;
             for (int i = 0; i < tokens.Count; i++) {
                 ScriptToken scriptToken = tokens[i];
-                if (scriptToken.Type == EScriptTokenType.L_PAREN)
+                if (openingBlocks.Contains(scriptToken.Type))
                     openParens++;
 
                 if (closingBlocks.Contains(scriptToken.Type)) {
-                    if (consumeSemicolon && scriptToken.Type != EScriptTokenType.SEMI_COLON)
-                        tokens.RemoveAt(0); // Consume end of block
-
-                    if (openParens > 0 && scriptToken.Type == EScriptTokenType.R_PAREN) {
+                    if (openParens > 0 && closingBlocks.Contains(scriptToken.Type)) {
                         openParens--;
                     } else {
                         break;
                     }
+                }
+
+                statementTokens.Add(scriptToken);
+                tokens.RemoveAt(0); // Consume part of statement
+                i--;
+            }
+            
+            // Consume closing block
+            if (hadOpeningBlock && consumeEnclosingTokens && closingBlocks.Contains(tokens[0].Type)) {
+                if (tokens[0].Type != closingBlockType)
+                {
+                    Console.WriteLine("Syntax error: Opening and closing symbols do not match.");
+                }
+                tokens.RemoveAt(0);
+            }
+            
+            return statementTokens;
+        }
+        
+        public static List<ScriptToken> GetStatementTokens(List<ScriptToken> tokens, bool consumeSemicolon = true)
+        {
+            List<ScriptToken> statementTokens = new List<ScriptToken>();
+            
+            for (int i = 0; i < tokens.Count; i++) {
+                ScriptToken scriptToken = tokens[i];
+
+                if (scriptToken.Type == EScriptTokenType.SEMI_COLON)
+                {
+                    if (consumeSemicolon)
+                        tokens.RemoveAt(0); // Consume semicolon
+                    break;
                 }
 
                 statementTokens.Add(scriptToken);
@@ -218,7 +271,7 @@ namespace HokumScript.Script
             EScriptTokenType open = EScriptTokenType.L_PAREN;
             EScriptTokenType close = EScriptTokenType.R_PAREN;
             string closeSymbol = ")";
-            
+
             switch(blockType) {
                 case EBlockType.BRACE:
                     open = EScriptTokenType.L_BRACE;
@@ -231,11 +284,11 @@ namespace HokumScript.Script
                     closeSymbol = "]";
                     break;
             }
-            
+
             int openBlocks = 0;
             List<List<ScriptToken>> args = new List<List<ScriptToken>>();
             List<ScriptToken> arg = new List<ScriptToken>();
-            
+
             for (int i = 0; i < tokens.Count; i++) {
                 ScriptToken scriptToken = tokens[i];
                 if (scriptToken.Type == open) {

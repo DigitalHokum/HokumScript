@@ -249,7 +249,7 @@ namespace HokumScript.Test
             Assert.Equal(46.0f, innerScope.Get("foo"));
             Assert.Equal(9.0f, scope.Get("foo"));
         }
-        
+
         [Fact]
         public async Task TestForStatementNodeWithInlineArray()
         {
